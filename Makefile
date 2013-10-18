@@ -1,4 +1,4 @@
-V=11
+V=$(date +"%Y.%m.%d")
 
 INSTALL_FILES=$(wildcard archiso/initcpio/install/*)
 HOOKS_FILES=$(wildcard archiso/initcpio/hooks/*)
