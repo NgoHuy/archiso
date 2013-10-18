@@ -1,0 +1,36 @@
+Change log
+
++ Add copytoram option to kernel paramaters as default
+
++ Remove pxe boot
+
++ Rename archiso to TheSlinux
+
++ Only use releng profile
+
++ Add Graphical option as second option ( requires display-manager.service as gdm, lxdm or slim )
+
++ LightDM as default login manager
+
++ Builb image as your architecture
+
++ Change run_one to run ( easy rebuild iso file )
+
++ Adding check user exists in customize-root-image, remove define multiuser service on boot to move it to kernel commandline
+
++ EFI supports only x64
+
++ Auto login change root to guest with sudo without passwd
+
++ Hostname change to TheSlinux
+
++ Grant user guest to uses sudo without password
+
++ Do not use zsh as default shell
+
++ Change pam_wheel option required to requisite not trust user from wheel group
+
++ Change session default to e17
+
++ Do not include sudoers.d directory, it doesn't work
+
