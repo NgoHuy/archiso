@@ -2,7 +2,7 @@
 
 set -e -u
 
-iso_name=archlinux
+iso_name=TheSLinux
 iso_label="ARCH_$(date +%Y%m)"
 iso_version=$(date +%Y.%m.%d)
 install_dir=arch
@@ -38,10 +38,7 @@ _usage ()
 
 # Helper function to run make_*() only one time per architecture.
 run_once() {
-    if [[ ! -e ${work_dir}/build.${1}_${arch} ]]; then
         $1
-        touch ${work_dir}/build.${1}_${arch}
-    fi
 }
 
 # Setup custom pacman.conf with current cache directories.
@@ -81,7 +78,7 @@ make_customize_root_image() {
 
     curl -o ${work_dir}/${arch}/root-image/etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
 
-    lynx -dump -nolist 'https://wiki.archlinux.org/index.php/Installation_Guide?action=render' >> ${work_dir}/${arch}/root-image/root/install.txt
+    # lynx -dump -nolist 'https://wiki.archlinux.org/index.php/Installation_Guide?action=render' >> ${work_dir}/${arch}/root-image/root/install.txt
 
     setarch ${arch} mkarchiso ${verbose} -w "${work_dir}/${arch}" -C "${pacman_conf}" -D "${install_dir}" -r '/root/customize_root_image.sh' run
     rm ${work_dir}/${arch}/root-image/root/customize_root_image.sh
@@ -200,16 +197,11 @@ make_prepare() {
 # Build ISO
 make_iso() {
     mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" checksum
-    mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -o "${out_dir}" iso "${iso_name}-${iso_version}-dual.iso"
+    mkarchiso ${verbose} -w "${work_dir}" -D "${install_dir}" -L "${iso_label}" -o "${out_dir}" iso "${iso_name}-${iso_version}.iso"
 }
 
 if [[ ${EUID} -ne 0 ]]; then
     echo "This script must be run as root."
-    _usage 1
-fi
-
-if [[ ${arch} != x86_64 ]]; then
-    echo "This script needs to be run on x86_64"
     _usage 1
 fi
 
@@ -230,33 +222,34 @@ while getopts 'N:V:L:D:w:o:vh' arg; do
     esac
 done
 
+if [ "$arch" = "i686" ] ; then
+
+    echo -e "\e[33m Warning : i686 does not support efi ! \e[1;32m"
+fi
+
 mkdir -p ${work_dir}
 
 run_once make_pacman_conf
 
 # Do all stuff for each root-image
-for arch in i686 x86_64; do
-    run_once make_basefs
-    run_once make_packages
-    run_once make_setup_mkinitcpio
-    run_once make_customize_root_image
-done
 
-for arch in i686 x86_64; do
-    run_once make_boot
-done
+run_once make_basefs
+run_once make_packages
+run_once make_setup_mkinitcpio
+run_once make_customize_root_image
+run_once make_boot
+
 
 # Do all stuff for "iso"
 run_once make_boot_extra
 run_once make_syslinux
 run_once make_isolinux
-run_once make_efi
-run_once make_efiboot
+
+if [ "$arch" != "i686" ] ; then 
+    run_once make_efi
+    run_once make_efiboot
+fi
 
 run_once make_aitab
-
-for arch in i686 x86_64; do
-    run_once make_prepare
-done
-
+run_once make_prepare
 run_once make_iso
